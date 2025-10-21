@@ -25,8 +25,12 @@ public class User {
 
     @NotBlank(message = "password cannot be empty")
     @Column(nullable = false, unique = false)
-    @Size(min = 8, max = 40, message = "Name must be between 8 and 40 characters")
+    // @Transient 
+    @Size(min = 8, message = "Password must be minimum 8 characters")
     private String password;
+
+    @Column(nullable = true, unique = false)
+    private String image;
 
     public Long getId() {
         return id;
@@ -60,4 +64,11 @@ public class User {
         this.password = password;
     }
 
+    public String getImage() {
+        return image;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
+    }
 }

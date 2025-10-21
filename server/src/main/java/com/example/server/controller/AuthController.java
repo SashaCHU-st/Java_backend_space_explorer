@@ -6,32 +6,33 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 
-import org.springframework.http.HttpStatus;
+// import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.validation.annotation.Validated;
+// import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import com.example.server.model.LoginRequest;
 import com.example.server.model.User;
 import com.example.server.service.UserService;
-import com.example.server.validation.*;
+// import com.example.server.validation.*;
 
 import jakarta.validation.Valid;;
 
 @RestController
-public class UserController {
+public class AuthController {
     private final UserService svc;
     private final PasswordEncoder passwordEncoder;
 
-    public UserController(UserService svc, PasswordEncoder passwordEncoder) {
+    public AuthController(UserService svc, PasswordEncoder passwordEncoder) {
         this.svc = svc;
         this.passwordEncoder = passwordEncoder;
     }
 
-    @GetMapping("/allUsers")
-    public List<User> all() {
-        return svc.getAllUsers();
-    }
+    // @GetMapping("/allUsers")
+    // public List<User> all() {
+    //     return svc.getAllUsers();
+    // }
 
     @PostMapping("/signup")
     public ResponseEntity<Map<String, Object>> create(@Valid @RequestBody User u) {
@@ -56,16 +57,16 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> login(@Valid @RequestBody User u) {
+    public ResponseEntity<Map<String, String>> login(@Valid @RequestBody LoginRequest req) {
         Map<String, String> res = new HashMap<>();
 
-        User user = svc.getByEmail(u.getEmail());
+        User user = svc.getByEmail(req.getEmail());
         if (user == null) {
             res.put("status", "error");
             res.put("message", "Not such as user ");
             return ResponseEntity.ok(res);
         }
-        if (passwordEncoder.matches(u.getPassword(), user.getPassword())) {
+        if (passwordEncoder.matches(req.getPassword(), user.getPassword())) {
             res.put("status", "ok");
             res.put("message", "Logged in");
             return ResponseEntity.ok(res);

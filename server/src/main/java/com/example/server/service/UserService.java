@@ -1,6 +1,6 @@
 package com.example.server.service;
 
-import com.example.server.repository.UserRepository;
+import com.example.server.repository.AuthRepository;
 import com.example.server.model.User;
 import java.util.List;
 
@@ -13,9 +13,9 @@ public class UserService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
-    private final UserRepository repo;
+    private final AuthRepository repo;
 
-    public UserService(UserRepository repo) {
+    public UserService(AuthRepository repo) {
         this.repo = repo;
     }
 
