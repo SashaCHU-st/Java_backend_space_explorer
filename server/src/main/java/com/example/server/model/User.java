@@ -1,8 +1,10 @@
 package com.example.server.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import com.example.server.validation.ValidationGroups;
+import jakarta.validation.constraints.Size;
+// import com.example.server.validation.ValidationGroups;
 
 @Entity
 @Table(name = "users")
@@ -12,15 +14,18 @@ public class User {
     private Long id;
 
     @NotBlank
+    @Email(message = "Invalid email format")
     @Column(nullable = false, unique = true)
     private String email;
 
-    @NotBlank(groups = ValidationGroups.OnCreate.class)
+    @NotBlank(message = "name cannot be empty")
     @Column(nullable = false, unique = false)
+    @Size(min = 2, max = 20, message = "Name must be between 2 and 20 characters")
     private String name;
 
-    @NotBlank(groups = ValidationGroups.OnCreate.class)
+    @NotBlank(message = "password cannot be empty")
     @Column(nullable = false, unique = false)
+    @Size(min = 8, max = 40, message = "Name must be between 8 and 40 characters")
     private String password;
 
     public Long getId() {

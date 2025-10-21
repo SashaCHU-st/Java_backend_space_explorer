@@ -4,11 +4,15 @@ import com.example.server.repository.UserRepository;
 import com.example.server.model.User;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UserService {
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
     private final UserRepository repo;
 
     public UserService(UserRepository repo) {
@@ -20,6 +24,8 @@ public class UserService {
     }
 
     public User create(User u) {
+        System.out.println("IIIIIII" + u.getName());
+        u.setPassword(passwordEncoder.encode(u.getPassword()));
         return repo.save(u);
     }
 
@@ -28,7 +34,7 @@ public class UserService {
     }
 
     public User getByEmail(String email) {
-        return repo.findByEmail(email).orElseThrow(() -> new RuntimeException("User with this name not found"));
+        return repo.findByEmail(email);
     }
 
     public User updateUser(Long id, User updateUser) {
@@ -38,7 +44,7 @@ public class UserService {
                         user.setName(updateUser.getName());
                     }
                     if (updateUser.getPassword() != null && !updateUser.getPassword().isBlank()) {
-                        user.setPassword(updateUser.getPassword());
+                        user.setPassword(passwordEncoder.encode(updateUser.getPassword()));
                     }
                     return repo.save(user);
                 })

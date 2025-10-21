@@ -1,11 +1,14 @@
 
 package com.example.server.controller;
+
 import java.util.HashMap;
 // import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,9 +21,11 @@ import jakarta.validation.Valid;;
 @RestController
 public class UserController {
     private final UserService svc;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserController(UserService svc) {
+    public UserController(UserService svc, PasswordEncoder passwordEncoder) {
         this.svc = svc;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @GetMapping("/allUsers")
@@ -29,9 +34,25 @@ public class UserController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<User> create(@Validated(ValidationGroups.OnCreate.class) @RequestBody User u) {
-        User saved = svc.create(u);
-        return ResponseEntity.status(201).body(saved);
+    public ResponseEntity<Map<String, Object>> create(@Valid @RequestBody User u) {
+        Map<String, Object> res = new HashMap<>();
+
+        User user = svc.getByEmail(u.getEmail());
+        if (user != null) {
+            res.put("status", "error");
+            res.put("message", "Already exist user, please login");
+            return ResponseEntity.status(409).body(res); 
+        } else {
+            System.out.println("IIIIIII");
+            User us = svc.create(u);
+            res.put("status", "ok");
+            res.put("message", "User created successfully");
+            Map<String, Object> userData = new HashMap<>();
+            userData.put("id", us.getId());
+            userData.put("email", us.getEmail());
+            res.put("user", userData);
+            return ResponseEntity.status(201).body(res);
+        }
     }
 
     @PostMapping("/login")
@@ -39,30 +60,34 @@ public class UserController {
         Map<String, String> res = new HashMap<>();
 
         User user = svc.getByEmail(u.getEmail());
-        if (user != null && user.getPassword().equals(u.getPassword())) {
-            System.out.println("NNNNNNNNNN");
+        if (user == null) {
+            res.put("status", "error");
+            res.put("message", "Not such as user ");
+            return ResponseEntity.ok(res);
+        }
+        if (passwordEncoder.matches(u.getPassword(), user.getPassword())) {
             res.put("status", "ok");
             res.put("message", "Logged in");
             return ResponseEntity.ok(res);
         } else {
-            System.out.println("OOOOOO");
             res.put("status", "error");
-            res.put("message", "Not Logged in");
+            res.put("message", "Wrong password");
             return ResponseEntity.ok(res);
         }
 
     }
 
     // @PutMapping("/user/{id}")
-    // public User updateUser(@RequestBody User newU, @Validated(ValidationGroups.OnUpdate.class) @PathVariable Long id) {
-    //     return svc.updateUser(id, newU);
+    // public User updateUser(@RequestBody User newU,
+    // @Validated(ValidationGroups.OnUpdate.class) @PathVariable Long id) {
+    // return svc.updateUser(id, newU);
     // }
 
     // @DeleteMapping("/delete/{id}")
     // public ResponseEntity<Void> delete(@PathVariable Long id) {
-    //     System.out.println("JJJJ=>" + id);
-    //     svc.deleteUser(id);
-    //     return ResponseEntity.ok().build();
+    // System.out.println("JJJJ=>" + id);
+    // svc.deleteUser(id);
+    // return ResponseEntity.ok().build();
     // }
 
 }
