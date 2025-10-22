@@ -1,12 +1,14 @@
 
 package com.example.server.controller;
 
+// import java.net.http.HttpResponse;
 import java.util.HashMap;
 // import java.util.HashMap;
 import java.util.Map;
-import java.util.List;
+// import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseCookie;
 // import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,7 +21,9 @@ import com.example.server.service.UserService;
 import com.example.server.utils.JwtUtil;
 // import com.example.server.validation.*;
 
-import jakarta.validation.Valid;;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpHeaders;
 
 @RestController
 public class AuthController {
@@ -34,13 +38,8 @@ public class AuthController {
         this.passwordEncoder = passwordEncoder;
     }
 
-    // @GetMapping("/allUsers")
-    // public List<User> all() {
-    // return svc.getAllUsers();
-    // }
-
     @PostMapping("/signup")
-    public ResponseEntity<Map<String, Object>> create(@Valid @RequestBody User u) {
+    public ResponseEntity<Map<String, Object>> create(@Valid @RequestBody User u, HttpServletResponse response) {
         Map<String, Object> res = new HashMap<>();
 
         User user = svc.getByEmail(u.getEmail());
@@ -52,9 +51,20 @@ public class AuthController {
             // System.out.println("IIIIIII");
             User us = svc.create(u);
             String token = jwtUtil.generateToken(us.getEmail());
+
+            ResponseCookie cookie = ResponseCookie.from("jwt", token)
+                    .httpOnly(true)
+                    .secure(true)
+                    .path("/")
+                    .maxAge(24 * 60 * 60)
+                    .sameSite("Strict")
+                    .build();
+
+            response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
             res.put("status", "ok");
             res.put("message", "User created successfully");
-            res.put("token", token);
+            // res.put("token", token);
             Map<String, Object> userData = new HashMap<>();
             userData.put("id", us.getId());
             userData.put("email", us.getEmail());
@@ -64,7 +74,8 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> login(@Valid @RequestBody LoginRequest req) {
+    public ResponseEntity<Map<String, String>> login(@Valid @RequestBody LoginRequest req,
+            HttpServletResponse response) {
         Map<String, String> res = new HashMap<>();
 
         User user = svc.getByEmail(req.getEmail());
@@ -75,9 +86,19 @@ public class AuthController {
         }
         if (passwordEncoder.matches(req.getPassword(), user.getPassword())) {
             String token = jwtUtil.generateToken(user.getEmail());
+
+            ResponseCookie cookie = ResponseCookie.from("jwt", token)
+                    .httpOnly(true)
+                    .secure(true)
+                    .path("/")
+                    .maxAge(24 * 60 * 60)
+                    .sameSite("Strict")
+                    .build();
+
+            response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
             res.put("status", "ok");
             res.put("message", "Logged in");
-            res.put("token", token);
+            // res.put("token", token);
             return ResponseEntity.ok(res);
         } else {
             res.put("status", "error");
@@ -85,6 +106,20 @@ public class AuthController {
             return ResponseEntity.ok(res);
         }
 
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Map<String, String>> logout(HttpServletResponse response) {
+        Map<String, String> res = new HashMap<>();
+        ResponseCookie cookie = ResponseCookie.from("jwt", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(0)
+                .sameSite("Strict")
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        return ResponseEntity.ok(res);
     }
 
     // @PutMapping("/user/{id}")
