@@ -37,18 +37,14 @@ public class UserService {
         return repo.findByEmail(email);
     }
 
-    public User updateUser(Long id, User updateUser) {
-        return repo.findById(id)
-                .map(user -> {
-                    if (updateUser.getName() != null && !updateUser.getName().isBlank()) {
-                        user.setName(updateUser.getName());
-                    }
-                    if (updateUser.getPassword() != null && !updateUser.getPassword().isBlank()) {
-                        user.setPassword(passwordEncoder.encode(updateUser.getPassword()));
-                    }
-                    return repo.save(user);
-                })
-                .orElse(null);
+    public User updateUser(User userFromDb, User updateUser) {
+        if (updateUser.getName() != null && !updateUser.getName().isBlank()) {
+            userFromDb.setName(updateUser.getName());
+        }
+        if (updateUser.getPassword() != null && !updateUser.getPassword().isBlank()) {
+            userFromDb.setPassword(passwordEncoder.encode(updateUser.getPassword()));
+        }
+        return repo.save(userFromDb);
     }
 
 }

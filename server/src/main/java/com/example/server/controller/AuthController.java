@@ -54,7 +54,7 @@ public class AuthController {
 
             ResponseCookie cookie = ResponseCookie.from("jwt", token)
                     .httpOnly(true)
-                    .secure(true)
+                    .secure(false)/// false only locally, on prod => true
                     .path("/")
                     .maxAge(24 * 60 * 60)
                     .sameSite("Strict")
@@ -82,14 +82,14 @@ public class AuthController {
         if (user == null) {
             res.put("status", "error");
             res.put("message", "Not such as user ");
-            return ResponseEntity.ok(res);
+            return ResponseEntity.status(400).body(res);
         }
         if (passwordEncoder.matches(req.getPassword(), user.getPassword())) {
             String token = jwtUtil.generateToken(user.getEmail());
 
             ResponseCookie cookie = ResponseCookie.from("jwt", token)
                     .httpOnly(true)
-                    .secure(true)
+                    .secure(false) /// false only locally, on prod => true
                     .path("/")
                     .maxAge(24 * 60 * 60)
                     .sameSite("Strict")
@@ -99,11 +99,11 @@ public class AuthController {
             res.put("status", "ok");
             res.put("message", "Logged in");
             // res.put("token", token);
-            return ResponseEntity.ok(res);
+            return ResponseEntity.status(200).body(res);
         } else {
             res.put("status", "error");
             res.put("message", "Wrong password");
-            return ResponseEntity.ok(res);
+            return ResponseEntity.status(400).body(res);
         }
 
     }
@@ -113,7 +113,7 @@ public class AuthController {
         Map<String, String> res = new HashMap<>();
         ResponseCookie cookie = ResponseCookie.from("jwt", "")
                 .httpOnly(true)
-                .secure(true)
+                .secure(false)/// false only locally, on prod => true
                 .path("/")
                 .maxAge(0)
                 .sameSite("Strict")
