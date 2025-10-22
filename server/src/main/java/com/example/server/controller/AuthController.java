@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 // import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import com.example.server.model.LoginRequest;
 import com.example.server.model.User;
 import com.example.server.service.UserService;
+import com.example.server.utils.JwtUtil;
 // import com.example.server.validation.*;
 
 import jakarta.validation.Valid;;
@@ -24,6 +26,9 @@ public class AuthController {
     private final UserService svc;
     private final PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
     public AuthController(UserService svc, PasswordEncoder passwordEncoder) {
         this.svc = svc;
         this.passwordEncoder = passwordEncoder;
@@ -31,7 +36,7 @@ public class AuthController {
 
     // @GetMapping("/allUsers")
     // public List<User> all() {
-    //     return svc.getAllUsers();
+    // return svc.getAllUsers();
     // }
 
     @PostMapping("/signup")
@@ -42,12 +47,14 @@ public class AuthController {
         if (user != null) {
             res.put("status", "error");
             res.put("message", "Already exist user, please login");
-            return ResponseEntity.status(409).body(res); 
+            return ResponseEntity.status(409).body(res);
         } else {
-            System.out.println("IIIIIII");
+            // System.out.println("IIIIIII");
             User us = svc.create(u);
+            String token = jwtUtil.generateToken(us.getEmail());
             res.put("status", "ok");
             res.put("message", "User created successfully");
+            res.put("token", token);
             Map<String, Object> userData = new HashMap<>();
             userData.put("id", us.getId());
             userData.put("email", us.getEmail());
@@ -67,8 +74,10 @@ public class AuthController {
             return ResponseEntity.ok(res);
         }
         if (passwordEncoder.matches(req.getPassword(), user.getPassword())) {
+            String token = jwtUtil.generateToken(user.getEmail());
             res.put("status", "ok");
             res.put("message", "Logged in");
+            res.put("token", token);
             return ResponseEntity.ok(res);
         } else {
             res.put("status", "error");
